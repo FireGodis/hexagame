@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Mini Jogo - Memória Hacker</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: linear-gradient(135deg, #0f172a, #020617);
+        color: white;
+    }
+
+    h1 { margin-top: 10px; }
+
+    .container {
+        display: grid;
+        grid-template-columns: repeat(2, 320px);
+        justify-content: center;
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .box {
+        border: 2px solid #334155;
+        padding: 15px;
+        border-radius: 12px;
+        background: #020617;
+        box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+
+    button {
+        margin: 5px;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #22c55e;
+        color: black;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        transform: scale(1.05);
+        background: #4ade80;
+    }
+
+    input {
+        padding: 6px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: none;
+        width: 80px;
+        text-align: center;
+    }
+
+    .game-area {
+        width: 300px;
+        height: 200px;
+        background: #1e293b;
+        margin: 10px auto;
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+    }
+
+    .player {
+        width: 30px;
+        height: 30px;
+        background: #facc15;
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        border-radius: 5px;
+    }
+
+    .coin {
+        width: 20px;
+        height: 20px;
+        background: gold;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        border-radius: 50%;
+    }
+</style>
+</head>
+<body>
+
+<h1>🧠 Jogo: Hacker de Memória</h1>
+<p>Pegue moedas ou hackeie a memória do jogo</p>
+
+<div class="game-area" id="game">
+    <div class="player" id="player"></div>
+    <div class="coin" id="coin"></div>
+</div>
+
+<div class="container">
+
+<div class="box">
+    <h3>📦 Memória</h3>
+    <p>0x01 (Vidas): <span id="vidas"></span></p>
+    <p>0x02 (Pontuação): <span id="score"></span></p>
+    <p>0x03 (Velocidade): <span id="speed"></span></p>
+</div>
+
+<div class="box">
+    <h3>🎮 Controles</h3>
+    <p>⬅️ ➡️ para mover</p>
+    <p>Pegue moedas!</p>
+</div>
+
+<div class="box">
+    <h3>💻 Hack</h3>
+    <p>Alterar vidas (0x01):</p>
+    <input type="number" id="hackVida">
+    <button onclick="hack(0x01, 'hackVida')">Alterar</button>
+
+    <p>Alterar score (0x02):</p>
+    <input type="number" id="hackScore">
+    <button onclick="hack(0x02, 'hackScore')">Alterar</button>
+
+    <p>Alterar velocidade (0x03):</p>
+    <input type="number" id="hackSpeed">
+    <button onclick="hack(0x03, 'hackSpeed')">Alterar</button>
+</div>
+
+<div class="box">
+    <h3>📢 Status</h3>
+    <p id="status"></p>
+</div>
+
+</div>
+
+<script>
+    let memoria = {
+        0x01: 3,
+        0x02: 0,
+        0x03: 3
+    };
+
+    let player = document.getElementById('player');
+    let coin = document.getElementById('coin');
+    let pos = 10;
+
+    function atualizarTela() {
+        document.getElementById('vidas').innerText = memoria[0x01];
+        document.getElementById('score').innerText = memoria[0x02];
+        document.getElementById('speed').innerText = memoria[0x03];
+
+        if (memoria[0x01] <= 0) {
+            document.getElementById('status').innerText = '💀 Game Over';
+        } else if (memoria[0x02] >= 20) {
+            document.getElementById('status').innerText = '🏆 Você venceu!';
+        } else {
+            document.getElementById('status').innerText = 'Jogando...';
+        }
+    }
+
+    function hack(addr, inputId) {
+        let valor = parseInt(document.getElementById(inputId).value);
+        if (!isNaN(valor)) {
+            memoria[addr] = valor;
+            atualizarTela();
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') pos += memoria[0x03];
+        if (e.key === 'ArrowLeft') pos -= memoria[0x03];
+
+        pos = Math.max(0, Math.min(270, pos));
+        player.style.left = pos + 'px';
+    });
+
+    function spawnCoin() {
+        let x = Math.random() * 260;
+        coin.style.left = x + 'px';
+        coin.style.top = '0px';
+
+        let fall = setInterval(() => {
+            let top = parseInt(coin.style.top);
+            coin.style.top = top + 5 + 'px';
+
+            let playerRect = player.getBoundingClientRect();
+            let coinRect = coin.getBoundingClientRect();
+
+            if (
+                coinRect.bottom >= playerRect.top &&
+                coinRect.left < playerRect.right &&
+                coinRect.right > playerRect.left
+            ) {
+                memoria[0x02]++;
+                clearInterval(fall);
+                spawnCoin();
+            }
+
+            if (top > 180) {
+                memoria[0x01]--;
+                clearInterval(fall);
+                spawnCoin();
+            }
+
+            atualizarTela();
+        }, 50);
+    }
+
+    spawnCoin();
+    atualizarTela();
+</script>
+
+</body>
+</html>
